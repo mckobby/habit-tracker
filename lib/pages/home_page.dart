@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../components/habit_tile.dart';
 import '../components/my_fab.dart';
-import '../components/new_habit_box.dart';
+import '../components/my_alert_box.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -27,15 +27,79 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  final newHabitNameController = TextEditingController();
+
   // create a new habit
   void createNewHabit() {
     // show alert dialog
     showDialog(
       context: context,
       builder: (context) {
-        return const EnterNewHabitBox();
+        return MyAlertBox(
+          controller: newHabitNameController,
+          hintText: 'Enter habit name',
+          onSave: saveNewHabit,
+          onCancel: cancelDialogBox,
+        );
       },
     );
+  }
+
+  // save new habit
+  void saveNewHabit() {
+    // add new habit to the list
+    setState(() {
+      if (newHabitNameController.text.isNotEmpty) {
+        todaysHabitList.add([newHabitNameController.text, false]);
+      }
+    });
+    // clear textfield
+    newHabitNameController.clear();
+    // pop dialog box
+    Navigator.of(context).pop();
+  }
+
+  // cancel new habit
+  void cancelDialogBox() {
+    // clear textfield
+    newHabitNameController.clear();
+    // pop dialog box
+    Navigator.of(context).pop();
+  }
+
+  // edit habit
+  void openHabitEdit(int index) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return MyAlertBox(
+          controller: newHabitNameController,
+          hintText: todaysHabitList[index][0],
+          onSave: () => saveExistingHabit(index),
+          onCancel: cancelDialogBox,
+        );
+      },
+    );
+  }
+
+  // save existing habit with different name
+  void saveExistingHabit(int index) {
+    setState(() {
+      if (newHabitNameController.text.isNotEmpty) {
+        todaysHabitList[index][0] = newHabitNameController.text;
+      }
+    });
+    // clear textfield
+    newHabitNameController.clear();
+    // pop dialog box
+    Navigator.of(context).pop();
+  }
+
+  // delete habit
+  void deleteHabit(int index) {
+    setState(() {
+      todaysHabitList.removeAt(index);
+    });
   }
 
   @override
@@ -52,6 +116,8 @@ class _HomePageState extends State<HomePage> {
             habitName: todaysHabitList[index][0],
             habitCompleted: todaysHabitList[index][1],
             onChanged: (value) => checkboxTapped(value, index),
+            editTapped: (context) => openHabitEdit(index),
+            deleteTapped: (context) => deleteHabit(index),
           );
         },
       ),
